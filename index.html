@@ -1,40 +1,257 @@
 <html>
+  <head>
+    <title>This will be an awesome game lads and lasses</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.15.1/dist/phaser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.36/dist/web3.min.js"></script>
+    <!-- put in separate file to make it clearer -->
+    <script src="eth.js"></script>
 
-<head>
-  <title>This will be an awesome game lads and lasses</title>
-  <script src="https://cdn.jsdelivr.net/npm/phaser@3.15.1/dist/phaser.min.js"></script>
+  </head>
 
+  <body>
+    <h1>this is our game belowwww</h1>
+    <script>
+      var config = {
+        width: 800,
+        height: 500,
+        type: Phaser.AUTO,
 
-</head>
+        scene: {
+          preload: gamePreload,
+          create: gameCreate,
+          update: gameUpdate
+        },
 
-<body>
-  <h1>this is our game below</h1>
-  <script>
-    var config = {
-      width: 800,
-      height: 500,
-      type: Phaser.AUTO,
-
-      scene: {
-        preload: gamePreload,
-        create: gameCreate,
-        update: gameUpdate
+        physics:{
+          default:"arcade",
+          arcade:{
+            gravity:{y:800},
+            debug:false
+          }
+        }
       }
 
-    function gamePreload() {
+      var game;
+      var knight;
+      var crates;
+      var coinTimer;
+      var cursors;
+      var score = 0;
+      var scoreText;
+      var secondsLeft = 10;
+      var timeLeftText;
+      var timeLeftTimer;
+      var gameOver = false;
+      var coinsSent = false;
 
-    }
-    function gameCreate() {
+      // getUserItems(function(){
+      //       game = new Phaser.Game(config);
+      //     });
 
-    }
-    function gameUpdate() {
+      function gamePreload(){
+        console.log('game loading assets');
+        this.load.image("knight","assets/knight.png");
+        this.load.image("crate","assets/crate.png");
+        this.load.image("background","assets/background.png");
+        this.load.image("pretzel_cut","assets/pretzel_cut.png");
 
-    }
+        //load the run animation frames
+        this.load.image("run_frame_1","assets/knight/run/Run (1).png");
+        this.load.image("run_frame_2","assets/knight/run/Run (2).png");
+        this.load.image("run_frame_3","assets/knight/run/Run (3).png");
+        this.load.image("run_frame_4","assets/knight/run/Run (4).png");
+        this.load.image("run_frame_5","assets/knight/run/Run (5).png");
+        this.load.image("run_frame_6","assets/knight/run/Run (6).png");
+        this.load.image("run_frame_7","assets/knight/run/Run (7).png");
+        this.load.image("run_frame_8","assets/knight/run/Run (8).png");
+        this.load.image("run_frame_9","assets/knight/run/Run (9).png");
+        this.load.image("run_frame_10","assets/knight/run/Run (10).png");
 
-    var game = new Phaser.Game(config);
+        //load the idle animation frames
+        this.load.image("idle_frame_1","assets/knight/idle/Idle (1).png");
+        this.load.image("idle_frame_2","assets/knight/idle/Idle (2).png");
+        this.load.image("idle_frame_3","assets/knight/idle/Idle (3).png");
+        this.load.image("idle_frame_4","assets/knight/idle/Idle (4).png");
+        this.load.image("idle_frame_5","assets/knight/idle/Idle (5).png");
+        this.load.image("idle_frame_6","assets/knight/idle/Idle (6).png");
+        this.load.image("idle_frame_7","assets/knight/idle/Idle (7).png");
+        this.load.image("idle_frame_8","assets/knight/idle/Idle (8).png");
+        this.load.image("idle_frame_9","assets/knight/idle/Idle (9).png");
+        this.load.image("idle_frame_10","assets/knight/idle/Idle (10).png");
 
 
-  </script>
-</body>
+      }
+      function gameCreate() {
+        console.log("game is setting up the assets");
+        //set up the background
+        this.add.image(300,150,"background");
+
+        //create the knight
+        knight = this.physics.add.sprite(100,100,"knight");
+        knight.body.setSize(415,630,500,50);
+        knight.scaleX = 0.15;
+        knight.scaleY = knight.scaleX;
+        // set up the crates
+        crates = this.physics.add.staticGroup();
+        //floor
+        crates.create(50,450,"crate");
+        crates.create(120,450,"crate");
+        crates.create(190,450,"crate");
+        crates.create(260,450,"crate");
+        crates.create(400,450,"crate");
+        crates.create(680,450,"crate");
+        crates.create(750,450,"crate");
+        //mid left
+        crates.create(200,260,"crate");
+        //mid left
+        crates.create(300,150,"crate");
+        //the first platform
+        crates.create(500,260,"crate");
+        //second platform
+        crates.create(650,260,"crate");
+
+
+        //create animations
+        this.anims.create({
+          key: "knight_run",
+          frames:[
+            {key: "run_frame_1"},
+            {key: "run_frame_2"},
+            {key: "run_frame_3"},
+            {key: "run_frame_4"},
+            {key: "run_frame_5"},
+            {key: "run_frame_6"},
+            {key: "run_frame_7"},
+            {key: "run_frame_8"},
+            {key: "run_frame_9"},
+            {key: "run_frame_10"},
+          ],
+          frameRate: 10,
+          repeat: 1
+        });
+
+        this.anims.create({
+          key: "knight_idle",
+          frames:[
+            {key: "idle_frame_1"},
+            {key: "idle_frame_2"},
+            {key: "idle_frame_3"},
+            {key: "idle_frame_4"},
+            {key: "idle_frame_5"},
+            {key: "idle_frame_6"},
+            {key: "idle_frame_7"},
+            {key: "idle_frame_8"},
+            {key: "idle_frame_9"},
+            {key: "idle_frame_10"},
+          ],
+          frameRate: 10,
+          repeat: 1
+        });
+
+
+
+        this.physics.add.collider(crates,knight);
+
+        scoreText = this.add.text(16, 16, "Mein Pretzel Bag: 0",
+                                  {fontSize: "20px",
+                                  fill: "#3b3ddb"});
+
+        timeLeftText = this.add.text(16, 40, secondsLeft + " seconds left in das Spiel: 0",
+        {fontSize: "20px",
+        fill: "#f00"});
+
+        cursors = this.input.keyboard.createCursorKeys();
+        coinTimer = this.time.addEvent({
+          delay: Phaser.Math.Between(1000,3000), //timer runs every random nr of seconds
+          callback: generateCoins,
+          callbackScope: this,
+          repeat: -1,
+        });
+
+        timeLeftTimer = this.time.addEvent({
+          delay: 1000,
+          //which function should be executed after each delay interval
+          callback: updateTimeLeft,
+          callbackScope: this,
+          repeat: -1
+        });
+
+      }
+
+      function updateTimeLeft(){
+        if(gameOver) {
+          if(!coinsSent){
+            mintAfterGame(score);
+            coinsSent = true;
+          }
+          return;
+        };
+       
+        secondsLeft -= 1;
+        timeLeftText.setText("seconds left in das Spiel: "+ secondsLeft)
+        if(secondsLeft<=0){
+          this.physics.pause();
+          gameOver = true;
+        }
+      }
+
+      function generateCoins(){
+        // console.log("Generating Coins");
+        var coins = this.physics.add.group({
+          key: "pretzel_cut",
+          repeat: 1, 
+          setXY:{
+            x: Phaser.Math.Between(0,800),
+            y: -100,
+            setpX: Phaser.Math.Between(30,100)
+          }
+        });
+
+        coins.children.iterate(function(child){
+          child.setBounceY(Phaser.Math.FloatBetween(0.4,1.5))
+        });
+
+        this.physics.add.collider(coins,crates);
+        //when console sees knight and coins overlap, collectCoin is ran
+        this.physics.add.overlap(knight, coins, collectCoin, null, this);
+
+
+      }
+      function collectCoin(knight, coin){
+        console.log("collection this coin");
+        //1 true, physics disable, second true: dissears from screen
+        coin.disableBody(true, true);
+        score+=1;
+        scoreText.setText("Mein Pretzel Bag: "+score)
+      }
+
+      function gameUpdate() {
+          if(cursors.left.isDown){
+            knight.setVelocityX(-250);
+            //second argument will make sure animation plays fully before restart
+            knight.play("knight_run", true);
+            knight.flipX = true;
+          }
+          else if(cursors.right.isDown){
+            knight.setVelocityX(200);
+            knight.play("knight_run", true);
+            knight.flipX = false;
+
+          }
+          else{
+            knight.setVelocityX(0);
+            knight.play("knight_idle", true);
+
+          }
+          if(cursors.up.isDown && knight.body.touching.down) {
+            knight.setVelocityY(-600);
+          }
+      }
+
+      var game = new Phaser.Game(config);
+
+
+    </script>
+  </body>
 
 </html>
